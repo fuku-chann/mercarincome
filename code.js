@@ -1,30 +1,22 @@
 function myFunction () {
-  var book = SpreadsheetApp.getActiveSpreadsheet();
-  var sheetData = book.getSheetByName("シート1");
+  var ss = SpreadsheetApp.openById('1D1yKV2OSlTfS2oQL74Xcd0mJ8-DSsZn88hQAV-6N82k');
+  var mySheet = ss.getSheets()[0];  
+  
+  const puppeteer = require('puppeteer');
 
-  var colID = 1;
-  var colURL = 2;
-  var colContributeCount = 3;
-  var colIcon = 4;
-
-  var rowStartData = 2
-  var rowEndData = sheetData.getDataRange().getLastRow()
-
-  for (var i = rowStartData; i <= rowEndData; i += 1) {
-      var url = 'http://qiita.com/' + sheetData.getRange(i, colID).getValue();
-      sheetData.getRange(i, colURL).setValue(url);
-      var response = UrlFetchApp.fetch(url);
-      var html = response.getContentText('UTF-8');
-
-      var searchTag = '/contributions"><span class="userActivityChart_statCount">';
-      var index = html.indexOf(searchTag)
-      if (index !== -1) {
-        var html = html.substring(index + searchTag.length);
-        var index = html.indexOf('</span>');
-        if (index !== -1) {
-          sheetData.getRange(i, colContributeCount).setValue(html.substring(0, index));
-        }
-      }
-
-  }
-}
+  (async () => {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    const url = 'https://www.mercari.com/jp/u/546096468/'
+    await page.goto(url);
+  
+    const name = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('h3.items-box-name'))
+        .map((partner) => partner.innerText.trim()
+      )
+    );
+    console.log(name);
+    await browser.close();
+  })();
+  mySheet.getRange(1,1).setValue(name);
+};
